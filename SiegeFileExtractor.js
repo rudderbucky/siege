@@ -3,11 +3,11 @@ const request = require('request');
 var extract = require('extract-zip');
 const { lstatSync, readdirSync } = fs = require('fs');
 var exec = require('child_process').execFile;
-const { join } = require('path')
+const { join } = path = require('path')
 
 class Siegefile
 {
-    constructor(repo, owner, updaterule, extract, execPath, name) 
+    constructor(repo, owner, updaterule, extract, execPath, name, iconPath, bgPath) 
     {
         this.repo = repo
         this.owner = owner
@@ -15,6 +15,8 @@ class Siegefile
         this.extract = extract
         this.execPath = execPath
         this.name = name
+        this.iconPath = iconPath
+        this.bgPath = bgPath
     }
 }
 
@@ -37,7 +39,7 @@ const SiegeStatus = {
 
 var siegefiles = []
 var siegefileStatuses = []
-var pathToSiegefolders = []
+var pathToSiegeFolders = []
 var octokitResults = []
 
 function pollAllSiegefolders()
@@ -45,13 +47,13 @@ function pollAllSiegefolders()
     const isDirectory = source => lstatSync(source).isDirectory()
     const getDirectories = source =>
       readdirSync(source).map(name => join(source, name)).filter(isDirectory)
-    console.log(getDirectories("Siegefolders").forEach(
+    console.log(getDirectories(path.resolve(__dirname, "Siegefolders")).forEach(
         (value, index) =>
         {
             siegefileStatuses.push(false)
             siegefiles.push(false)
             octokitResults.push(null)
-            pathToSiegefolders.push(value)
+            pathToSiegeFolders.push(value)
             pollSiegefolder(value, index)
         }
     ))
@@ -73,7 +75,7 @@ function pollSiegefolder(pathToSiegeFolder, index)
         {
             console.log("Could not find Siegefile. Abort.")
             siegefileStatuses[index] = SiegeStatus.ERROR
-            throw err;
+            throw err
         }
 
         // get octokit
@@ -103,7 +105,7 @@ function pollSiegefolder(pathToSiegeFolder, index)
                 {
                     console.log("Unexpected error.")
                     siegefileStatuses[index] = SiegeStatus.ERROR
-                    throw err;
+                    throw err
                 }
             })
 
@@ -125,6 +127,7 @@ function checkUpdate(index, pathToSiegeFolder, siegefile, octokitResult)
             {
                 console.log("Up to date.")
                 siegefileStatuses[index] = SiegeStatus.READY
+                readyImages(index, pathToSiegeFolder)
             }
             else
             {
@@ -137,7 +140,7 @@ function checkUpdate(index, pathToSiegeFolder, siegefile, octokitResult)
         {
             console.log("Could not open SiegeMetaFile despite its existence. Abort.")
             siegefileStatuses[index] = SiegeStatus.ERROR
-            throw err;
+            throw err
         }
     })
 }
@@ -158,12 +161,13 @@ function execute(index)
             break
         case SiegeStatus.UNINSTALLED:
             siegefileStatuses[index] = SiegeStatus.INSTALLING
-            install(index, pathToSiegefolders[index], siegefiles[index], octokitResults[index])
+            install(index, pathToSiegeFolders[index], siegefiles[index], octokitResults[index])
+            updateStatusText(siegefileStatuses[index])
             console.log("Entry now installling.")
             break
         case SiegeStatus.READY:
             console.log("Executing entry " + index + ".")
-            exec(pathToSiegefolders[index] + "/gamefiles/" + siegefiles[index].execPath, function(err)
+            exec(pathToSiegeFolders[index] + "/gamefiles/" + siegefiles[index].execPath, function(err)
             {
                 if(err)
                 {
@@ -220,7 +224,8 @@ function install(index, pathToSiegeFolder, siegefile, octokitResult)
                 metaFile.currentVer = octokitResult.data.tag_name
                 fs.writeFile(pathToSiegeFolder + "/SiegeMetaFile", JSON.stringify(metaFile), (msg) => {console.log(msg)})
 
-                extract(zippath, {dir: process.cwd() +"/" + pathToSiegeFolder + "/gamefiles"}, function (err) {
+                extract(zippath, {dir: pathToSiegeFolder + "/gamefiles"}, function (err) {
+                    // extraction is complete. make sure to handle the err
                     if(err != null) 
                     {
                         console.error(err)
@@ -230,10 +235,59 @@ function install(index, pathToSiegeFolder, siegefile, octokitResult)
                     {
                         console.log("Extraction complete!")
                         siegefileStatuses[index] = SiegeStatus.READY
+                        statusBarAnimation(siegefileStatuses[index])
+                        fs.copyFile(gameFilesPath + "/" + siegefile.iconPath, pathToSiegeFolder + "/siege_gameicon.png", (err) => {
+                            if (err)
+                            {
+                                console.log("Could not download icon image.")
+                                console.log(err)
+                            } 
+                            console.log('Icon image downloaded successfully!')
+                        });
+
+                        fs.copyFile(gameFilesPath + "/" + siegefile.bgPath, pathToSiegeFolder + "/siege_bgicon.png", (err) => {
+                            if (err)
+                            {
+                                console.log("Could not download background image.")
+                                console.log(err)
+                            } 
+                            console.log('Background image downloaded successfully!')
+                        });
+                        readyImages(index, pathToSiegeFolder)
                     }
-                    // extraction is complete. make sure to handle the err
                 })
             })
         }
     }
+}
+
+function readyImages(index, pathToSiegeFolder)
+{
+    if(entryIconImages != null && entryIconImages[index + 1] != null)  
+        getIconImageLink(pathToSiegeFolder, (src) => {entryIconImages[index + 1].src = src;})
+}
+
+function getIconImageLink(pathToSiegeFolder, cb)
+{
+    fs.open(pathToSiegeFolder + "/siege_gameicon.png", "r", (err, fd) => 
+    {
+        if(fd != null)
+            fs.close(fd, () => {console.log("Icon image call complete.")});
+        if(err == null)
+        {
+            console.log("Icon image exists.")
+            cb(pathToSiegeFolder + "/siege_gameicon.png")
+            return pathToSiegeFolder + "/siege_gameicon.png"
+        } else if(err.code === "ENOENT")
+        {
+            console.log("Icon image does not exist.")
+            cb("settings.png")
+            return "settings.png"
+            // install(pathToSiegeFolder, siegefile, result)
+        } else
+        {
+            console.log("Unexpected error.")
+            throw err
+        }
+    })
 }

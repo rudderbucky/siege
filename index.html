@@ -24,11 +24,46 @@
     body {
         background: #080808;
     }
+    .bg {
+      position: fixed;
+      top: 0%;
+      left: 0%;
+    }
     div.Row {
         display: table;
     }
     div.Column {
         display: table-cell;
+    }
+    div.Fade {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-image: linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0));
+    }
+    div.Grey {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: #303030;
+    }
+    div.StatusBar {
+      position: absolute;
+      right: 0;
+      bottom: -30px;
+      left: 0;
+      height: 30px;
+      background: limegreen;
+    }
+    div.KeyBar {
+      display: table;
+      position: fixed;
+      bottom: 5%;
+      left: 80%;
     }
   </style>
   <head>
@@ -37,12 +72,23 @@
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
   </head>
   <body>
+    <div class="Grey"></div>
+    <div id=bg></div>
+    <div id=fade class="Fade"></div>
+    <div id=menu class="menu">
+    </div>
+    <div id=statusBar class="StatusBar">
+      <p id=statusBarText style='position: relative; bottom: 35%; 
+        text-align: center; font-family: Calibri; color: white;'>Siege is currently testing.</p>
+    </div>
+    <div id=keyBar class="KeyBar">
+      <div class="Column"><img id=execute src="execute.png"></div>
+      <div class="Column"><img src="navigate.png" style="padding-left: 20px;"></div>
+    </div>
     <img src="exit.png" style="position: absolute; right: 1%;" onclick="exitWindow()">
     <div id="loading">
       <img src="siege.png" alt="siege" class="icon">
       <img src="cross.png" id="loadingCross" class="cross">
-    </div>
-    <div id="menu" class="menu">
     </div>
   </body>
 </html>

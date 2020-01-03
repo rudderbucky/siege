@@ -6,6 +6,7 @@ function createWindow () {
     width: 800,
     height: 600,
     frame: false,
+    icon: "siege.png",
     webPreferences: {
       nodeIntegration: true
     }
