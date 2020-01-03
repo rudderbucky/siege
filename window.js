@@ -1,5 +1,12 @@
 var Mousetrap = require('mousetrap');
 
+var loadingDone = false
+var const1 = 50
+var const2 = 50
+var numElements = 10
+var index = 0
+var moveRunning = false
+
 function exitWindow () 
 {
     close()
@@ -44,30 +51,31 @@ function crossAnimation()
     }, 5)
 }
 
-var loadingDone = false
-
 function init() 
 {
     crossAnimation()
+    pollAllSiegefolders()
     var int = setInterval(function ()
     {
-        loadingDone = true
-        displayMenu()
-        clearInterval(int)
-    }, 2000)
+        loadingDone = siegefiles.every((value) => {return (value != false)})
+        console.log(siegefiles)
+        if(loadingDone) 
+        {
+            clearInterval(int)
+            numElements = siegefiles.length + 1 // add 1 for settings
+            displayMenu()
+        }
+    }, 1000)
 }
-
-var const1 = 50
-var const2 = 50
-var numElements = 10
 
 function displayMenu() 
 {
     var tableDiv = document.getElementById("menu")
     var table = document.createElement("div")
-    for(i = 0; i < numElements; i++)
+    addToTable("settings.png", "Settings", table, openSettings)
+    for(i = 0; i < numElements - 1; i++)
     {
-        addToTable("settings.png", "Settings", table, openSettings)
+        addToTable("settings.png", siegefiles[i].name, table, openSettings)
     }
     tableDiv.appendChild(table)
     tableDiv.style.transform = "translateY(" + -(const1 / 2) + "px)"
@@ -97,12 +105,7 @@ function addToTable(imgPath, imgText, table, func)
     tr.appendChild(text)
 
     table.appendChild(tr)
-    funcs.push(func)
 }
-
-var funcs = []
-var index = 0
-var moveRunning = false
 
 function move(moveUp, newIndex) 
 {
@@ -167,7 +170,8 @@ Mousetrap.bind('up', function ()
 
 Mousetrap.bind('return', function() 
 {
-    funcs[index]()
-    pollSiegefolder("Siegefolders/shellcore")
+    if(index > 0) execute(index - 1)
+    else openSettings()
 })
+
 init()
