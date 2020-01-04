@@ -284,6 +284,5 @@ Mousetrap.bind('return', function()
     else settingsOn ? closeSettings() : openSettings()
 })
 
-autoUpdate();
 initSettings();
-init()
+init();
