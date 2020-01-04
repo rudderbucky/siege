@@ -4,6 +4,7 @@ var extract = require('extract-zip');
 const { lstatSync, readdirSync } = fs = require('fs');
 var exec = require('child_process').execFile;
 const { join } = path = require('path')
+const { remote } = require('electron')
 
 class Siegefile
 {
@@ -47,7 +48,13 @@ function pollAllSiegefolders()
     const isDirectory = source => lstatSync(source).isDirectory()
     const getDirectories = source =>
       readdirSync(source).map(name => join(source, name)).filter(isDirectory)
-    console.log(getDirectories(path.resolve(__dirname, "Siegefolders")).forEach(
+
+    if (!fs.existsSync(path.resolve(__dirname, "Siegefolders"))){
+        console.log("Siegefolders directory not found. Creating.")
+        fs.mkdirSync(path.resolve(__dirname, "Siegefolders"));
+    }
+    
+    getDirectories(path.resolve(__dirname, "Siegefolders")).forEach(
         (value, index) =>
         {
             siegefileStatuses.push(false)
@@ -56,7 +63,7 @@ function pollAllSiegefolders()
             pathToSiegeFolders.push(value)
             pollSiegefolder(value, index)
         }
-    ))
+    )
 }
 
 function pollSiegefolder(pathToSiegeFolder, index)
@@ -167,6 +174,7 @@ function execute(index)
             break
         case SiegeStatus.READY:
             console.log("Executing entry " + index + ".")
+            var mainWindow = remote.BrowserWindow.getFocusedWindow()
             exec(pathToSiegeFolders[index] + "/gamefiles/" + siegefiles[index].execPath, function(err)
             {
                 if(err)
@@ -175,7 +183,12 @@ function execute(index)
                     // don't change status here, no reason to
                     console.error(err)
                 } 
+                else
+                {
+                    mainWindow.restore()
+                }
             })
+            mainWindow.minimize()
             break
     }
 }
@@ -191,8 +204,18 @@ function download(url, dest, cb)
             return cb('Response status was ' + response.statusCode);
         }
 
+        totalLength = response.headers["content-length"];
         sendReq.pipe(file);
+        totalReceived = 0
+        var progressBar = document.getElementById("progressBar")
+
+        sendReq.on('data', (data) => {
+            totalReceived += data.length
+            progressBar.style.width = (totalReceived) * 100 / totalLength + "%"
+        })
     });
+
+    // TODO: Get progress bar to work with multiple different entries
 
     // close() is async, call cb after close completes
     file.on('finish', () => file.close(cb));
@@ -281,8 +304,8 @@ function getIconImageLink(pathToSiegeFolder, cb)
         } else if(err.code === "ENOENT")
         {
             console.log("Icon image does not exist.")
-            cb("settings.png")
-            return "settings.png"
+            cb("images/settings.png")
+            return "images/settings.png"
             // install(pathToSiegeFolder, siegefile, result)
         } else
         {

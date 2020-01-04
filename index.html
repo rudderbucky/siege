@@ -1,9 +1,12 @@
 <html>
-  <script src="SiegeFileExtractor.js"></script>
-  <script src="window.js"></script>
   <link rel = "stylesheet"
    type = "text/css"
    href = "disable_grabbing.css" />
+  <script src="scripts/auto.js"></script>
+  <script src="scripts/settings.js"></script>
+  <script src="scripts/SiegeFileExtractor.js"></script>
+  <script src="scripts/window.js"></script>
+
   <style>
     .cross {
       position: fixed;
@@ -22,6 +25,7 @@
       top: 50%;      
     }
     body {
+        font-family: Calibri;
         background: #080808;
     }
     .bg {
@@ -33,7 +37,7 @@
         display: table;
     }
     div.Column {
-        display: table-cell;
+      display: table-cell;
     }
     div.Fade {
       position: absolute;
@@ -59,11 +63,66 @@
       height: 30px;
       background: limegreen;
     }
+    div.ProgressBar {
+      position: absolute;
+      right: 0;
+      bottom: 0px;
+      left: 0;
+      height: 4px;
+      width: 0%;
+      background: blue;
+    }
     div.KeyBar {
       display: table;
       position: fixed;
       bottom: 5%;
-      left: 80%;
+      right: 5%;
+      opacity: 0%;
+    }
+    div.SettingsBar {
+      position: absolute;
+      right: -30%;
+      bottom: -0px;
+      height: 100%;
+      width: 30%;
+      background: rgba(60,60,60,0.4);
+    }
+    .glow {
+      display: table-cell;
+      animation: glow 1s ease-in-out infinite alternate;
+    }
+
+    #title-bar {
+      -webkit-app-region: drag;
+      position: absolute;
+      height: 18px; 
+      top: 0;
+      width: 100%;
+      left: 0;
+      background: rgba(60,60,60,0.4);
+    }
+
+    #title {
+      font-family: "Calibri";
+      color: white;
+      position: fixed;
+      top: 0px;
+      margin: auto;
+      width: 50%;
+    }
+
+    #title-bar-btns {
+      -webkit-app-region: no-drag;
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 2px #808080, 0 0 3px #808080, 0 0 8px #808080, 0 0 10px #808080, 0 0 15px #808080, 0 0 5px #808080, 0 0 5px #808080;
+      }
+      
+      to {
+        text-shadow: 0 0 2px #808080, 0 0 5px #808080, 0 0 10px #808080, 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 5px #ffffff, 0 0 5px #ffffff;
+      }
     }
   </style>
   <head>
@@ -79,16 +138,26 @@
     </div>
     <div id=statusBar class="StatusBar">
       <p id=statusBarText style='position: relative; bottom: 35%; 
-        text-align: center; font-family: Calibri; color: white;'>Siege is currently testing.</p>
+        text-align: center; font-family: Calibri; color: white;'>Siege is currently testing.
+      </p>
+      <div id=progressBar class="ProgressBar"></div>
     </div>
-    <div id=keyBar class="KeyBar">
-      <div class="Column"><img id=execute src="execute.png"></div>
-      <div class="Column"><img src="navigate.png" style="padding-left: 20px;"></div>
+    
+    <div id=settingsBar class="SettingsBar"><p>This is a placeholder. Settings will come soon.</p></div>
+
+    <div id=keyIconBar class="KeyBar">
+      <div class="Column"><img id=execute src="images/execute.png"></div>
+      <div class="Column"><img src="images/navigate.png" style="padding-left: 20px;"></div>
     </div>
-    <img src="exit.png" style="position: absolute; right: 1%;" onclick="exitWindow()">
+
+    <div id="title-bar">
+      <div id="title">Siege Game Launcher</div>
+      <img src="images/exit.png" style="position: absolute; right: 0%; top: 0%; -webkit-app-region: no-drag; opacity: 40%;" onclick="exitWindow()">
+    </div>
+
     <div id="loading">
-      <img src="siege.png" alt="siege" class="icon">
-      <img src="cross.png" id="loadingCross" class="cross">
+      <img src="images/siege.png" alt="siege" class="icon">
+      <img src="images/cross.png" id="loadingCross" class="cross">
     </div>
   </body>
 </html>
