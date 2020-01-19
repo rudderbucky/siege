@@ -195,6 +195,7 @@ function execute(index)
 
 function download(url, dest, cb) 
 {
+    if(fs.existsSync(dest)) fs.unlinkSync(dest);
     const file = fs.createWriteStream(dest);
     const sendReq = request.get(url);
 
@@ -247,6 +248,22 @@ function install(index, pathToSiegeFolder, siegefile, octokitResult)
                 metaFile.currentVer = octokitResult.data.tag_name
                 fs.writeFile(pathToSiegeFolder + "/SiegeMetaFile", JSON.stringify(metaFile), (msg) => {console.log(msg)})
 
+                // source: https://geedew.com/remove-a-directory-that-is-not-empty-in-nodejs/
+                var deleteFolderRecursive = function(path) {
+                    if( fs.existsSync(path) ) {
+                      fs.readdirSync(path).forEach(function(file,index){
+                        var curPath = path + "/" + file;
+                        if(fs.lstatSync(curPath).isDirectory()) { // recurse
+                          deleteFolderRecursive(curPath);
+                        } else { // delete file
+                          fs.unlinkSync(curPath);
+                        }
+                      });
+                      fs.rmdirSync(path);
+                    }
+                };
+
+                if(fs.existsSync(pathToSiegeFolder + "/gamefiles")) deleteFolderRecursive(pathToSiegeFolder + "/gamefiles");
                 extract(zippath, {dir: pathToSiegeFolder + "/gamefiles"}, function (err) {
                     // extraction is complete. make sure to handle the err
                     if(err != null) 
